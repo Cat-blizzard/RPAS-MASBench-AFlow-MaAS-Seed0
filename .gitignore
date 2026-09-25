@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+outputs/
+logs/
+external_baselines/
+*.ckpt
+*.pt
+*.safetensors
