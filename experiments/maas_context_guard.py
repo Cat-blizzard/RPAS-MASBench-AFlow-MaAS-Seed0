@@ -85,6 +85,8 @@ def patch_template_directory(path: Path, concise: bool = True) -> dict[str, Any]
             "version": VERSION,
             "path": str(path),
             "concise_prompt_variant": "maas_concise_v2",
+            "prompt_adapter_origin": "reconstructed_from_pinned_maas_templates",
+            "equivalence_to_omitted_adapter": "unverified",
             "prompt_sha256": __import__("hashlib").sha256(prompt_path.read_bytes()).hexdigest(),
             "operator_sha256": __import__("hashlib").sha256(operator_path.read_bytes()).hexdigest(),
         }
@@ -117,6 +119,8 @@ def patch_template_directory(path: Path, concise: bool = True) -> dict[str, Any]
         "version": VERSION,
         "path": str(path),
         "concise_prompt_variant": "maas_concise_v2" if concise else "native_repaired",
+        "prompt_adapter_origin": "reconstructed_from_pinned_maas_templates",
+        "equivalence_to_omitted_adapter": "unverified",
         "prompt_sha256": __import__("hashlib").sha256(prompt_path.read_bytes()).hexdigest(),
         "operator_sha256": __import__("hashlib").sha256(operator_path.read_bytes()).hexdigest(),
     }
