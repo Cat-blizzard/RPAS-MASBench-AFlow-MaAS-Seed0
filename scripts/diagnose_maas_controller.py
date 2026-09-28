@@ -178,7 +178,7 @@ def prepare_isolated_repo(
 
     native_root = repo / "maas/ext/maas/scripts/optimized/MATH"
     repairs = [
-        patch_template_directory(native_root / split / "template", concise=True)
+        patch_template_directory(native_root / split / "template", concise=False)
         for split in ("train", "test")
     ]
     destination = repo / RELATIVE_ROOT

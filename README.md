@@ -1,6 +1,6 @@
 # Native AFlow + MaAS on MASBench (seed 0)
 
-This package is a **single-seed, five-axis pilot** of AFlow and MaAS on the frozen Salesforce/MASBench data shipped here. It is not a three-seed paper table and it makes no across-seed variance/significance claim. The baseline implementations are fetched from their upstream repositories at pinned commits; run-local compatibility/data/scoring adapters are patched. The omitted MaAS prompt adapters have been reconstructed from the pinned native templates, so their prompt text is not proven identical to the missing original adapters. Each method/axis gets an isolated output tree.
+This package is a **single-seed, five-axis pilot** of AFlow and MaAS on the frozen Salesforce/MASBench data shipped here. It is not a three-seed paper table and it makes no across-seed variance/significance claim. The baseline implementations are fetched from their upstream repositories at pinned commits; run-local compatibility/data/scoring adapters are patched. The missing RPAS-project MaAS helper files were later supplied in a separate project branch and pinned here by SHA-256. MASBench uses their native-template compatibility repair without the optional concise prompt rewrite. Each method/axis gets an isolated output tree.
 
 ## Locked protocol
 
@@ -42,6 +42,8 @@ bash scripts/run_masbench_seed0.sh all
 
 To run a single method, use `bash scripts/run_masbench_seed0.sh aflow` or `... maas`. `RPAS_OUTPUT_ROOT` and `RPAS_PORT` may be changed to a new location/port. A method-axis-seed directory is never overwritten: the runner skips it only if its stored gate and a fresh gate verification both pass; any partial/failed unit stops the run. If a unit was interrupted, preserve that root for diagnosis and use a fresh root for a clean rerun. Fully gated earlier units can safely be skipped if the same command is re-invoked. MaAS requires local Sentence-Transformers `all-MiniLM-L6-v2` weights.
 
+The current staged run keeps AFlow in a frozen code worktree and writes to `outputs/masbench_aflow_then_maas_seed0`. After all five AFlow gates pass, run `maas` with that same `RPAS_OUTPUT_ROOT`, then invoke `experiments/aggregate_masbench_seed0.py` directly. Each result manifest points to its own frozen source root for fresh validation. The generic `all` runner's skip check uses its current source root, so it is not the entry point for combining these two code snapshots.
+
 The script launches vLLM in BF16 on localhost, waits for the exact served model ID, evaluates each axis, runs the fail-closed quality gate after every run, and stops its own server on exit. `all` gates AFlow breadth and MaAS breadth first, then runs the remaining AFlow and MaAS axes serially. The runner records each native source commit/hash and exact run settings. It does not submit to a scheduler and has no global wall-time guarantee. It never resumes partial output directories: preserve and diagnose an interrupted directory, then use a fresh output root for a clean run.
 
 The `all` runner automatically writes the aggregate after all 10 runs pass their individual gates. To revalidate an existing aggregate without overwriting it:
@@ -63,7 +65,8 @@ PYTHONPATH="$PWD:$PWD/experiments:$PWD/external_comparison" \
     experiments.test_masbench_answer_protocol \
     experiments.test_masbench_quality_gate \
     experiments.test_aggregate_masbench_seed0 \
-    experiments.test_maas_prompt_repair -v
+    experiments.test_maas_prompt_repair \
+    experiments.test_diagnose_maas_controller -v
 PYTHONPATH="$PWD:$PWD/experiments:$PWD/external_comparison" \
   python experiments/masbench_runtime_smoke.py
 ```
@@ -76,7 +79,7 @@ PYTHONPATH="$PWD:$PWD/experiments:$PWD/external_comparison" \
 - MaAS: [bingreeky/MaAS](https://github.com/bingreeky/MaAS), pinned commit `987f3c1bc9a96e844fe090db3791446e3ef0f5c7`.
 - Third-party baseline code is cloned on the target machine, not copied into this ZIP. `scripts/setup_baselines.sh` refuses to replace an existing checkout unless it is already at the exact pinned revision.
 - The packaged MASBench files state provenance from `JiangyueAnn/RPAS` at `e12f588`, but that repository is currently inaccessible. A [source audit](data/masbench/CHECKSUM_AUDIT.md) verified every D_search/D_select row against a pinned [Salesforce/MASBench](https://huggingface.co/datasets/Salesforce/MASBench) official train Parquet and corrected one stale checksum entry. D_test content was not opened during that audit. The historical RPAS split-generation process remains independently unverified.
-- `experiments/maas_prompt_repair.py` and `experiments/maas_concise_prompts_v2.py` are documented reconstructions of modules omitted from this package. The concise variant shortens native MATH instructions and removes two CoT examples. Keep its hashes and origin in run records; do not claim byte-for-byte equivalence to the omitted prompt adapter.
+- The [MaAS helper provenance](experiments/MAAS_HELPER_PROVENANCE.md) records the two files copied from `Simplification555/RPAS-EC2-A100` commit `ba1ca711f148642f6e61bb38c52a0e8994e54c98` and their SHA-256 values. That repository reports recovery from an RPAS working copy without original Git metadata; this package independently checked the published file hashes, not the earlier working copy. MASBench applies `maas_prompt_repair.py` with `concise=False`; `maas_concise_prompts_v2.py` is retained for provenance but its wording edits are not used. The context guard remains a recorded adapter, so label MaAS results accordingly.
 - This is a one-seed execution package, not evidence for the screenshot's three-seed mean±SD table. D_test is included because the RPAS canonical data branch contains it; do not use it for search, tuning, prompt changes, or candidate selection. Publicly sharing benchmark test examples may affect benchmark hygiene, even where the upstream dataset license permits redistribution.
 - No separate license is asserted for this package's custom harness code. The method repositories and dataset keep their upstream licenses; see their linked source repositories/cards.
 - Raw predictions and model outputs can contain benchmark material; keep result directories access-controlled.

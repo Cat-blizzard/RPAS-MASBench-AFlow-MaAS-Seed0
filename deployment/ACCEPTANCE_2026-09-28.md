@@ -17,11 +17,16 @@ outputs and did not parse D_test.
 | Shared GPU residency | While MaAS trained, GPU 0 showed about 44,278 MiB total used: vLLM 43,368 MiB and MaAS 880 MiB. No OOM was observed. |
 | Search/select provenance | 240 packaged D_search/D_select rows verified against pinned official Salesforce/MASBench train Parquet; D_test content was not opened by the audit. See `../data/masbench/CHECKSUM_AUDIT.md`. |
 
-The source package omitted two custom MaAS prompt modules. The replacement
-adapters were reconstructed from pinned native templates; the concise variant
-removes two chain-of-thought examples. Any formal MaAS results from this
-package are therefore a documented adapter variant, not a byte-for-byte
-reproduction of the unavailable modules.
+The MaAS GPU diagnostic above used reconstructed prompt helpers before the
+original RPAS-project helper files were supplied. The two supplied files were
+copied from `Simplification555/RPAS-EC2-A100@ba1ca711` and match its published
+SHA-256 values; the pinned native MaAS train/test templates pass offline repair
+tests with them. The updated MASBench protocol uses `concise=False`, retaining
+native prompt wording apart from literal/format-string compatibility repair.
+Repeat the MaAS GPU diagnostic with the recovered helpers before its formal
+run. The source repository reports recovery from a working copy without
+original Git metadata, so formal results should state “MaAS with RPAS-project
+compatibility/context adapter,” not unmodified upstream MaAS.
 
 These checks establish readiness to attempt the ten formal method-axis cells.
 Their scores and quality gates must be evaluated from the formal output tree.

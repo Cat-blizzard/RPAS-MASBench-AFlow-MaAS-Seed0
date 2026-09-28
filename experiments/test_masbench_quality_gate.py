@@ -19,7 +19,10 @@ class MasBenchQualityGateTests(unittest.TestCase):
         (exp / "native_aime_formal.py").write_text("base runner", encoding="utf-8")
         (exp / "masbench_answer_protocol.py").write_text("parser", encoding="utf-8")
         for name in RUNTIME_ADAPTER_FILES["maas"]:
-            (exp / name).write_text(name, encoding="utf-8")
+            if name in ("maas_prompt_repair.py", "maas_concise_prompts_v2.py"):
+                (exp / name).write_bytes(Path(__file__).with_name(name).read_bytes())
+            else:
+                (exp / name).write_text(name, encoding="utf-8")
         deployment = repo / "deployment"
         deployment.mkdir()
         model_specs = {
@@ -191,9 +194,12 @@ class MasBenchQualityGateTests(unittest.TestCase):
             operator.write_text(f"operator for {split}", encoding="utf-8")
             repairs.append({
                 "version": "maas_context_guard_v1", "path": str(template),
-                "concise_prompt_variant": "maas_concise_v2",
-                "prompt_adapter_origin": "reconstructed_from_pinned_maas_templates",
-                "equivalence_to_omitted_adapter": "unverified",
+                "concise_prompt_variant": "native_repaired",
+                "prompt_adapter_origin": "recovered_rpas_working_copy",
+                "helper_source_repository": "Simplification555/RPAS-EC2-A100",
+                "helper_source_commit": "ba1ca711f148642f6e61bb38c52a0e8994e54c98",
+                "helper_source_path": "experiments/external_baselines/masbench_aflow_maas_seed0/experiments",
+                "original_helper_git_commit": None,
                 "prompt_sha256": sha256_file(prompt),
                 "operator_sha256": sha256_file(operator),
             })
@@ -328,6 +334,31 @@ class MasBenchQualityGateTests(unittest.TestCase):
             report = self.validate_fixture(run_dir, "maas")
         self.assertFalse(report["passed"])
         self.assertTrue(any("repaired prompt.py hash mismatch" in error for error in report["errors"]),
+                        report["errors"])
+
+    def test_maas_helper_hash_must_match_recovered_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            run_dir = self.make_maas_fixture(Path(directory))
+            manifest_path = run_dir / "run_manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            helper = Path(manifest["rpas_root"]) / "experiments/maas_prompt_repair.py"
+            helper.write_text("changed helper", encoding="utf-8")
+            manifest["runtime_adapter_sha256"][helper.name] = sha256_file(helper)
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            report = self.validate_fixture(run_dir, "maas")
+        self.assertFalse(report["passed"])
+        self.assertTrue(any("does not match pinned source" in error for error in report["errors"]),
+                        report["errors"])
+
+    def test_maas_rejects_concise_prompt_variant(self):
+        with tempfile.TemporaryDirectory() as directory:
+            run_dir = self.make_maas_fixture(Path(directory))
+            result = json.loads((run_dir / "native_result.json").read_text(encoding="utf-8"))
+            result["prompt_repairs"][0]["concise_prompt_variant"] = "maas_concise_v2"
+            self.replace_result(run_dir, result)
+            report = self.validate_fixture(run_dir, "maas")
+        self.assertFalse(report["passed"])
+        self.assertTrue(any("not the frozen native repair" in error for error in report["errors"]),
                         report["errors"])
 
     def test_run_session_record_hash_is_checked(self):

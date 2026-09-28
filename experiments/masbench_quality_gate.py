@@ -43,6 +43,17 @@ RUNTIME_ADAPTER_FILES = {
         "maas_concise_prompts_v2.py",
     ),
 }
+RECOVERED_MAAS_HELPER_SHA256 = {
+    "maas_prompt_repair.py": "dbfad9d7c66e1b80df18a2550a9c1c6a4766943d900d909810ed7bbc9fa2f63c",
+    "maas_concise_prompts_v2.py": "a4af1fd1f791b6b9fdb3a98c74c92418222ac3b80cc692b15ebe216b787f583f",
+}
+MAAS_PROMPT_ADAPTER_PROVENANCE = {
+    "prompt_adapter_origin": "recovered_rpas_working_copy",
+    "helper_source_repository": "Simplification555/RPAS-EC2-A100",
+    "helper_source_commit": "ba1ca711f148642f6e61bb38c52a0e8994e54c98",
+    "helper_source_path": "experiments/external_baselines/masbench_aflow_maas_seed0/experiments",
+    "original_helper_git_commit": None,
+}
 
 
 def sha256_file(path: Path) -> str:
@@ -199,6 +210,10 @@ def validate_run(run_dir: Path, rpas_root: Path | None = None) -> dict[str, Any]
                 runtime_hashes.get(name) if isinstance(runtime_hashes, dict) else None
             ):
                 errors.append(f"runtime adapter hash mismatch: {name}")
+        if method == "maas" and isinstance(runtime_hashes, dict):
+            for name, expected_hash in RECOVERED_MAAS_HELPER_SHA256.items():
+                _fail_if(runtime_hashes.get(name) != expected_hash,
+                         f"MaAS recovered helper does not match pinned source: {name}", errors)
         revisions_path = effective_rpas_root / "deployment/model_revisions.json"
         model_assets = manifest.get("model_asset_provenance")
         if not revisions_path.is_file() or not isinstance(model_assets, dict):
@@ -415,11 +430,11 @@ def validate_run(run_dir: Path, rpas_root: Path | None = None) -> dict[str, Any]
                 )
                 _fail_if(path.resolve() != expected_template.resolve(),
                          "MaAS prompt repair path is not the native MATH template", errors)
-                _fail_if(repair.get("concise_prompt_variant") != "maas_concise_v2",
-                         "MaAS prompt repair variant is not the frozen concise template", errors)
+                _fail_if(repair.get("concise_prompt_variant") != "native_repaired",
+                         "MaAS prompt repair variant is not the frozen native repair", errors)
                 _fail_if(repair.get("version") != "maas_context_guard_v1" or
-                         repair.get("prompt_adapter_origin") != "reconstructed_from_pinned_maas_templates" or
-                         repair.get("equivalence_to_omitted_adapter") != "unverified",
+                         any(repair.get(key) != value for key, value in MAAS_PROMPT_ADAPTER_PROVENANCE.items()) or
+                         "original_helper_git_commit" not in repair,
                          "MaAS prompt repair provenance is incorrect", errors)
                 for filename, field in (("prompt.py", "prompt_sha256"), ("op_prompt.py", "operator_sha256")):
                     source = path / filename

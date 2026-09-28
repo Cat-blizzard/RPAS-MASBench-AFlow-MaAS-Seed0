@@ -753,8 +753,8 @@ def run_maas(
     train_source = repo / "maas/ext/maas/scripts/optimized/MATH/train"
     test_source = repo / "maas/ext/maas/scripts/optimized/MATH/test"
     from maas_context_guard import patch_template_directory
-    prompt_repairs = [patch_template_directory(train_source / "template", concise=True),
-                      patch_template_directory(test_source / "template", concise=True)]
+    prompt_repairs = [patch_template_directory(train_source / "template", concise=False),
+                      patch_template_directory(test_source / "template", concise=False)]
     shutil.copytree(train_source, repo / relative_root / "train", dirs_exist_ok=True)
     shutil.copytree(test_source, repo / relative_root / "test", dirs_exist_ok=True)
     ensure_package_tree(repo / relative_root, repo)

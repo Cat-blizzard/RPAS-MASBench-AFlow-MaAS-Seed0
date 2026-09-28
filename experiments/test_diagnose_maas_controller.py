@@ -61,8 +61,11 @@ class MaASControllerDiagnosticTests(unittest.TestCase):
             self.assertFalse((repo / ".git").exists())
             prompt = (repo / "workspace/rpas_synthetic_maas/MATH/train/template/prompt.py").read_text()
             operator = (repo / "workspace/rpas_synthetic_maas/MATH/train/template/op_prompt.py").read_text()
-            self.assertIn("Keep every calculation needed to obtain the answer.", prompt)
-            self.assertIn("Return one fenced Python code block", operator)
+            self.assertTrue(all(repair["concise_prompt_variant"] == "native_repaired"
+                                for repair in staging["template_repairs"]))
+            self.assertIn("Please solve the given mathematical problem step by step.", prompt)
+            self.assertNotIn("Keep every calculation needed to obtain the answer.", prompt)
+            self.assertIn("GENERATE_COT_PROMPT", operator)
 
     def test_no_empty_or_large_synthetic_batch(self) -> None:
         with TemporaryDirectory() as temporary:
