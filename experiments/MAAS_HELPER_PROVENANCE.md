@@ -27,4 +27,6 @@ needed to execute the released MaAS MATH templates, and does not apply the
 separate concise-v2 wording changes. The deterministic context guard remains
 an adapter and is recorded in run manifests; therefore results should be
 labelled “MaAS with RPAS-project compatibility/context adapter,” not as an
-unmodified upstream MaAS run. No result values are included in this package.
+unmodified upstream MaAS run. The completed single-seed results and original
+runtime records are published in
+[`results/masbench_seed0_20260930`](../results/masbench_seed0_20260930/README.md).

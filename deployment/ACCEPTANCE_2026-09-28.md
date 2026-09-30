@@ -30,3 +30,16 @@ compatibility/context adapter,” not unmodified upstream MaAS.
 
 These checks establish readiness to attempt the ten formal method-axis cells.
 Their scores and quality gates must be evaluated from the formal output tree.
+
+## Follow-up on 2026-09-29
+
+The required diagnostic with the recovered helpers passed at approximately
+00:14 Asia/Shanghai on 2026-09-29, before formal MaAS execution. It used two
+synthetic rows, concurrency 2, and a 1536-token generation ceiling. Its original
+report and logs are retained under
+`provenance/diagnostics/maas_recovered_20260929/` in the
+[published evidence archive](../results/masbench_seed0_20260930/README.md).
+This small diagnostic verifies a controller update with the recovered helpers;
+it is separate from the full 6144-token formal workload. The initial formal
+MaAS breadth attempt failed its 180-second graph timeout; the fresh recovery
+and all completed formal results are documented in that result bundle.
